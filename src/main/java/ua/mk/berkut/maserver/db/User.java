@@ -1,6 +1,8 @@
 package ua.mk.berkut.maserver.db;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 public class User {
     private int id;
@@ -10,6 +12,8 @@ public class User {
     private LocalDate birthday;
     private String city;
     private String description;
+
+    private Set<Integer> friendsIds;
 
     public User(String login, String password, String username, LocalDate birthday, String city, String description) {
         this(0,login,password,username,birthday,city,description);
@@ -23,6 +27,7 @@ public class User {
         this.birthday = birthday;
         this.city = city;
         this.description = description;
+        friendsIds = new HashSet<>();
     }
 
     public int getId() {
@@ -79,6 +84,14 @@ public class User {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Set<Integer> getFriendsIds() {
+        return friendsIds;
+    }
+
+    public void setFriendsIds(Set<Integer> friendsIds) {
+        this.friendsIds = friendsIds;
     }
 
     @Override

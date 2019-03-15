@@ -1,6 +1,7 @@
 package ua.mk.berkut.maserver;
 
 import ua.mk.berkut.maserver.clients.ClientThread;
+import ua.mk.berkut.maserver.dao.FriendDAO;
 import ua.mk.berkut.maserver.dao.UserDAO;
 import ua.mk.berkut.maserver.db.User;
 
@@ -20,6 +21,7 @@ public class Main {
     Connection connection;
     List<User> users;
     UserDAO userDAO;
+    FriendDAO friendDAO;
 
     public static void main(String[] args)throws Exception {
         new Main().run();
@@ -27,7 +29,7 @@ public class Main {
 
     private void run() throws Exception {
         startServer();
-        users = userDAO.getAllUsers();
+        //users = userDAO.getAllUsers();
         printUsers(users);
         ServerSocket serverSocket = new ServerSocket(
                 Integer.parseInt(properties.getProperty("port", "1234"))
@@ -49,5 +51,22 @@ public class Main {
                 properties.getProperty("url"),
                 properties);
         userDAO = new UserDAO(connection);
+        friendDAO = new FriendDAO(connection);
+    }
+
+    public void remove(ClientThread clientThread) {
+        //TODO реализовать отключение клиента, завершившего работу
+    }
+
+    public User findUser(String login, String password) {
+        User user = userDAO.findUser(login, password);
+        if (user!=null) {
+            user.setFriendsIds(friendDAO.getFriedsFor(user.getId()));
+        }
+        return user;
+    }
+
+    public List<User> getOnlineUsers() {
+        return users;
     }
 }

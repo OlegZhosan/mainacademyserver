@@ -53,4 +53,40 @@ public class UserDAO {
         }
         return result;
     }
+
+    public User findUser(String login, String password) {
+        try (PreparedStatement ps = connection.prepareStatement("select `id`, `login`, `password` from chatuser where `login` = ?")) {
+            ps.setString(1, login);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                if (rs.getString("password").equals(password)) {
+                    return find(rs.getInt("id"));
+                } else return null;
+            } else return null;
+        } catch (SQLException e) {
+            return null;
+        }
+    }
+
+    public User find(int id) {
+        try (PreparedStatement ps = connection.prepareStatement("select * from chatuser where id = ?")) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return null;
+            String login = rs.getString("login");
+            String password = rs.getString("password");
+            String username = rs.getString("username");
+            Date date = rs.getDate("birthday");
+            LocalDate birthday;
+            if (date!=null) {
+                birthday = date.toLocalDate();
+            } else {
+                birthday = LocalDate.of(1900, 1, 1);
+            }String city = rs.getString("city");
+            String description = rs.getString("description");
+            return new User(id,login,password,username,birthday,city,description);
+        } catch (SQLException e) {
+            return null;
+        }
+    }
 }

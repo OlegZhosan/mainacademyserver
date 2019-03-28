@@ -133,7 +133,7 @@ public class ClientThread extends Thread{
     public User getUser() { return user; }
 
     //сеттер пользователя
-//    public void setUser(User user) { this.user = user; }
+    public void setUser(User user) { this.user = user; }
 
     //отправить клиенту сообщение
     public void  send(String sender, String text){ out.println(">>>" + sender + ">>>" + text); }

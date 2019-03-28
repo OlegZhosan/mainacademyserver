@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class Main {
     private Properties properties = new Properties();//подключение к стандартному классу Properties (свойства) для вытягивания свойств из файла chat.cfg и соединения с putty
-    //List<User> users;//список всех пользователей
+    List<User> users;//список всех пользователей
 
     /**
      * Список потоков, обслуживающих пользователей
@@ -166,5 +166,5 @@ public class Main {
     }
 
     //геттер списка всех пользователей
-    //public List<User> getUsers() {return users;}
+    public List<User> getUsers() {return users;}
 }

@@ -23,16 +23,19 @@ public class ClientThread extends Thread{
     private Socket socket;//соединение для клиента
     private User user;//user для одного потока
 
-    //конструктор потока
+    /**
+     * Конструктор потока
+     * @param socket сокет для подключения
+     * @param main ссылка на объект главного класса сервера
+     */
     public ClientThread(Socket socket, Main main) {
         this.socket = socket;//соединение для клиента
         this.main = main;//соединение с классом Main
     }
 
-    //запуск
-    public static void main(String[] args) throws Exception { new Main().run(); }
-
-    //главный метод потока
+    /**
+     * Главный метод потока, в нем происходит "общение" клиента с сервером
+     */
     //ждет информации от клиента
     @Override
     public void run(){
@@ -50,18 +53,15 @@ public class ClientThread extends Thread{
                 while ((message = in.readLine())!= null){//пока соединение не закрыто???
 
                     //обновление списка друзей
-                    if ("<<<".equals(message)){
+                    if ("<<<".equals(message)){// Show online friends
                         onlineUsers = main.getOnlineUsers();
 
                         //фильтрация из всех пользоваетлей оннлайн только друзей
                         sendList(onlineUsers.stream().filter(u->user.getFriendsIds().contains(u.getId())).collect(Collectors.toList()));
 
-                        //добавление в друзья
-                    }else if (message.startsWith("+++")){
-                        main.processAddFriend(message.substring(3));
-
-                    }else if (">>>exit<<<".equals(message)){ break; }//выход
-                    else { main.processMessage(message); }
+                    }else if (message.startsWith("+++")){ main.processAddFriend(message.substring(3));//добавление в друзья
+                    }else if (">>>exit<<<".equals(message)) break; //выход
+                    else  main.processMessage(message);
                 }
             }
         } catch (IOException e) {
@@ -75,53 +75,76 @@ public class ClientThread extends Thread{
         }
     }
 
-    //выдача списка пользователей онлайн
+    /**
+     * Отправка списка пользователей подключенному клиенту
+     * @param list список, содержащий информацию о пользователях в формате: id;username;login
+     */
     private void sendList(List<User> list) {
         out.println("<<<");
-        for (User u : list) { out.println(u.getId() + ";" + u.getUsername() + ";" + u.getLogin()); }
+        for (User u : list) out.println(u.getId() + ";" + u.getUsername() + ";" + u.getLogin());
         out.println("<<<");
     }
 
-    //метод обработки логина и пароля, введенного клиентом
-    //выводит стартовое сообщение
-    //отправляет на регистрацию, если нужно
+    /**
+     * Обработка логина и пароля вновь подключившегося пользователя.
+     * Отправляет на регистрацию, если нужно
+     * Сначала отправляется признак подключения: {@code Server Ok}
+     * Затем, проверяются login-password и если подключение удалось, отправлем признак подключения: {@code Login Ok}
+     * @return true, если подключение успешно, и false - в противном случае
+     * @throws IOException если произошла ошибка при подключении
+     */
     private boolean login() throws IOException {
+        System.out.println("Server Ok");
         out.println("Server Ok");//выводить клиенту при правильном подключении (признак подключения)
         String line = in.readLine();//считать строку
-        if(line.startsWith("register")){return register(line);}
+        if(line.startsWith("register"))return register(line);
         String[] s = line.split(";");//обьявление массива строк, со словами, разделенными пробелом
         //s[0] - "login"
         //s[1] - login
         //s[2] - password
-        if(s.length != 3){//если массив не равен трем
-            out.println("Login failed 2");
+        if(!"login".equals(s[0])){//если первое слово в строке не "login"
+            System.out.println("Login failed 1");
+            out.println("Login failed 1");
             return false;
         }
-        if(!"login".equals(s[0])){//если первое слово в строке не "login"
-            out.println("Login failed 1");
+        if(s.length != 3){//если массив не равен трем
+            System.out.println("Login failed 2");
+            out.println("Login failed 2");
             return false;
         }
         String login = s[1];//второе слово воспринимать как значение параметра login
         String password = s[2];//второе слово воспринимать как значение параметра password
         User user = findUser(login, password);//поиск пользователя в бд по введенному логину
         if(user == null){//если обьект user равен нулю
+            System.out.println("Login failed 3");
             out.println("Login failed 3");
             return false;
         }
         this.user = user;//присвоение значения этой переменной общей переменной класса
+        System.out.println("Login OK");
         out.println("Login OK");
         return true;
     }
 
-    //поиск пользователя в бд по введенному логину
+    /**
+     * Метод, делегирующий в Main поиск пользователя по логину и паролю
+     * @param login логин пользователя
+     * @param password пароль пользователя
+     * @return найденного пользователя
+     */
     private User findUser(String login, String password) {
         return main.findUser(login, password);
     }
 
-    //регистрация
+    /**
+     * Метод, делегирующий в Main регистрацию пользователя
+     * @param line строка регистрации
+     * @return true - если пользователь зарегистрировался успешно, false - в противном случае
+     */
     private boolean register(String line){
         User user = main.register(line);
         if (user==null)return false;
+        System.out.println("Register OK");
         out.println("Register OK");
         return true;
     }
@@ -130,10 +153,13 @@ public class ClientThread extends Thread{
     //геттер залогиненого пользователя
     //получение пользователя, ассоциированного с потоком
     //нужен для отправки соощения???
-    public User getUser() { return user; }
-
-    //сеттер пользователя
-    public void setUser(User user) { this.user = user; }
+    /**
+     * Получение пользователя, ассоциированного с потоком
+     * @return пользователя, ассоциированного с потоком
+     */
+    public User getUser() {
+        return user;
+    }
 
     //отправить клиенту сообщение
     public void  send(String sender, String text){ out.println(">>>" + sender + ">>>" + text); }

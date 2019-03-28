@@ -17,9 +17,14 @@ public class FriendDAO {
         this.connection = connection;
     }
 
-    //метод выдачи клиенту всех его друзей по его id
+    /**
+     * Метод выдачи клиенту всех его друзей по его id
+     * @param id id пользователя
+     * @return множество id друзей того пользователя, id которого указан
+     */
+    //возможно, ошибка здесь???!!!
     public Set<Integer> getFriendsFor(int id) {//метод-множество значений id
-        Set<Integer> result = new HashSet<>();//множество
+        Set<Integer> result = new HashSet<>();//множество первой дружбы???
         try (PreparedStatement ps1 = connection.prepareStatement("select id2 from friend where id1 = ?");
              PreparedStatement ps2 = connection.prepareStatement("select id1 from friend where id2 = ?")
              //достань строку колонки id2 (кто дружит) из таблицы friend для заданного значания id1(его друзья)???
@@ -51,9 +56,11 @@ public class FriendDAO {
         return result;
     }
 
-    //добавление в друзья
-    //from - кто
-    //to - с кем
+    /**
+     * Добавление дружбы
+     * @param from кто
+     * @param to с кем
+     */
     public void addFriendFor(int from, int to){
         try (PreparedStatement preparedStatement = connection.prepareStatement("insert into friend (id2, id1) values (?, ?)")) {
             preparedStatement.setInt(1, from);

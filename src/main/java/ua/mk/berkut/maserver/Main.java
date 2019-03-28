@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class Main {
     private Properties properties = new Properties();//подключение к стандартному классу Properties (свойства) для вытягивания свойств из файла chat.cfg и соединения с putty
-    List<User> users;//список всех пользователей
+    private List<User> users;//список всех пользователей
 
     /**
      * Список потоков, обслуживающих пользователей
@@ -44,9 +44,9 @@ public class Main {
     //последовательность выполнения методов
     public void run() throws Exception {
         try (Connection ignored = startServer()){//запуск сервера (подключение к бд)
-            //users = userDAO.getAllUsers();//вытягивание из бд списока друзей онлайн???
+            users = userDAO.getAllUsers();//вытягивание из бд списока друзей онлайн???
             onlineUsersTreads = new ArrayList<>();//список пользователей онлайн
-            //printUsers(users);//вывод на конслоль всех клиентов
+            printUsers(users);//вывод на конслоль всех клиентов
 
             //подключение для клиента
             ServerSocket serverSocket = new ServerSocket(Integer.parseInt(properties.getProperty("port", "1234")));
@@ -59,7 +59,6 @@ public class Main {
                 //метод start() для ClientThread возможен только, если в ClientThread есть "public static void main(String[] args) {new Main().run();}"
             }
         }
-//        connection.close();//закрыть соединение, если реализован выход
     }
 
     /**
@@ -128,13 +127,20 @@ public class Main {
         //если он найден (ifPresent), примени к нему метод send и передачей полей (sender, text)
     }
 
-    //метод добавления пользователя в онлайн, когда он вошел в сеть
-    //synchronized - синхронизация!!!
+    /**
+     * Добавляет поток клиента к списку online
+     * @param clientThread поток, обслуживающий клиента
+     */
     public synchronized void addToOnline(ClientThread clientThread){
         onlineUsersTreads.add(clientThread);
     }
+    //synchronized - синхронизация!!!
 
-    //регистрация
+    /**
+     * Регистрация нового пользователя
+     * @param line строка содержащая данные регистрации. Формат строки: register;login;password;username;date;city
+     * @return нового зарегистрированного пользователя или null, если регистрация не удалась
+     */
     public User register(String line) {
         try {
             String[] s = line.split(SEPARATOR);
@@ -146,6 +152,7 @@ public class Main {
             String[] split = dateStr.split("\\D");// "\\D" - любой нецифровой символ
             LocalDate birthday = LocalDate.of(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
             String city = s[5];
+            //добавить description?!
             User user = new User(login, password, username, birthday, city, "");
             user = userDAO.addUser(user);
             return user;
@@ -154,7 +161,10 @@ public class Main {
         }
     }
 
-    //добавление в друзья
+    /**
+     * Реакция на сообщение о добавлении друга
+     * @param line информация о добавлении друга в формате: кто_добавляет;кого_добавляет
+     */
     public void processAddFriend(String line) {
         String[] s = line.split(SEPARATOR);
         if(s.length!=2)return;
@@ -166,5 +176,13 @@ public class Main {
     }
 
     //геттер списка всех пользователей
-    public List<User> getUsers() {return users;}
+    @SuppressWarnings("unused")
+    public List<User> getUsers() {
+        return users;
+    }
+
+    //печать всех пользователей на консоль
+    private void printUsers(List<User> users) {
+        users.forEach(System.out::println);
+    }
 }
